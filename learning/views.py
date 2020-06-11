@@ -6,6 +6,7 @@ from django.core.files.storage import FileSystemStorage
 from eyear_server import settings
 from . import sound_analysis
 import os
+import json
 
 
 @csrf_exempt
@@ -16,5 +17,5 @@ def get_data(request):
         os.remove(os.path.join(settings.MEDIA_ROOT, 'file.wav'))
     fs.save('file.wav', request.FILES['file'])
     answer = sound_analysis.main()
-    return HttpResponse(answer)
+    return HttpResponse(json.dumps(str(answer)))
 

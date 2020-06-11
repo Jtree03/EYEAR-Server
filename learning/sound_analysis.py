@@ -8,6 +8,7 @@ import os
 from eyear_server import settings
 
 n_dim = 193
+limit_percentage = 73.
 # 사운드 판단 모듈입니다.
 
 
@@ -43,8 +44,9 @@ def parse_audio_files(filenames):
 
 
 def main():
+    print("<분석>")
     audio_files = []
-    audio_files.extend(glob.glob(os.path.join(settings.BASE_DIR, '/efas_server-master/media/file.wav')))
+    audio_files.extend(glob.glob(os.path.join(settings.BASE_DIR, '/EYEAR_server/media/file.wav')))
 
     X = parse_audio_files(audio_files)
 
@@ -52,22 +54,30 @@ def main():
     xhat = tf.reshape(xhat, [-1, 1, n_dim, 1])
 
     # 학습된 모델 불러오기
-    model = load_model(os.path.join(settings.BASE_DIR, '/efas_server-master/learning/sound_model.h5'))
+    model = load_model(os.path.join(settings.BASE_DIR, '/EYEAR_server/learning/sound_model.h5'))
 
     # 신경망에 데이터 주입
     yhat = model.predict_proba(xhat)
 
-    sound_kind = ['None', 'Car horn', '-', 'Dog bark', '-',
-                  'Engine idling', 'Gun shot', 'Jackhammer', 'Siren']
+    sound_kind = ["None", "Car horn", "-", "Dog bark", "-",
+                  "Engine idling", "Gun shot", "Jackhammer", "Siren"]
     # 결과
     i = 0
+    percentage = np.round(yhat[i] * 100, 0)
     print(yhat)
     for result in yhat:
         print(i, '파일 : ' + audio_files[i] + '\t\t결과 : ' + sound_kind[int(np.argmax(yhat[i]))])
-        print("확률 : " + str(np.round(yhat[i] * 100, 0)))
+        print("확률 : " + str(percentage))
         i += 1
     print("젤 높은거 : " + str(yhat[0][np.argmax(yhat[0])]))
-    if yhat[0][np.argmax(yhat[0])] * 100 > 73.:
-        return sound_kind[int(np.argmax(yhat[0]))]
-    else:
-        return "Unknown"
+    
+    answer = dict(zip(sound_kind, percentage))
+    
+    print(answer)
+    
+    return answer
+    
+#    if yhat[0][np.argmax(yhat[0])] * 100 > limit_percentage:
+#        return sound_kind[int(np.argmax(yhat[0]))]
+#    else:
+#        return "Unknown"
